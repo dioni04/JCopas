@@ -2,10 +2,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+// Classe q engloba uma maquina
 public class Game {
+    public final int numCards = 40;
     public final int numPlayers = 4;
-    public List<Player> players = new ArrayList<>();
+    public final int cardPerPlayer = numCards / numPlayers;
+
     public List<Card> cards = new ArrayList<>();
+    
+    private Player player;
+    private Network.Node node;
 
     public static List<Card> createShuffledDeck() {
         List<Card> deck = new ArrayList<>();
@@ -22,9 +28,4 @@ public class Game {
         return deck;
     }
 
-    public void distributeCards() {
-        for (Player player : players) {
-            player.receiveCard(cards.removeFirst());
-        }
-    }
 }

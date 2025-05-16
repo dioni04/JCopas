@@ -3,6 +3,7 @@ import java.util.*;
 public class Player {
     private boolean hasBaton = false;
     private int points = 0;
+    private boolean dealer = false;
     private List<Card> cards = new ArrayList<>();
 
     public void receiveBaton() {
@@ -14,10 +15,15 @@ public class Player {
         // Pass baton to next player
     }
 
+    public void playCard(int index){
+        
+    } 
+
     public void gainPoints(ArrayList<Card> cards) {
         for (var card : cards) {
             points += card.getValue();
         }
+        this.dealer = true;
         // End Game
         // if(points >= 100)
     }

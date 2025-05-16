@@ -1,10 +1,31 @@
 public class Card {
     public enum Suit {
-        SPADES, HEARTS, DIAMONDS, CLUBS
+        SPADES("S"), HEARTS("H"), DIAMONDS("D"), CLUBS("C");
+
+        private final String key;
+
+        Suit(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return this.key;
+        }
     }
 
     public enum Rank {
-        TWO, THREE, FOUR, FIVE, SIX, QUEEN, JACK, KING, SEVEN, ACE
+        TWO("2"), THREE("3"), FOUR("4"), FIVE("5"), SIX("6"),
+        QUEEN("Q"), JACK("J"), KING("K"), SEVEN("7"), ACE("A");
+
+        private final String key;
+
+        Rank(String key) {
+            this.key = key;
+        }
+
+        public String getKey() {
+            return this.key;
+        }
     }
 
     private final Suit suit;
@@ -26,6 +47,13 @@ public class Card {
     @Override
     public String toString() {
         return rank + " of " + suit;
+    }
+
+    public String toMessage() {
+        String ret = "CARD-";
+        ret += this.rank.getKey();
+        ret += this.suit.getKey();
+        return ret;
     }
 
     public int getValue() {
