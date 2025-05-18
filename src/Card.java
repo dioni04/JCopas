@@ -11,20 +11,35 @@ public class Card {
         public String getKey() {
             return this.key;
         }
+
+        public Suit getByKey(String key) {
+            return Suit.valueOf(key);
+        }
     }
 
     public enum Rank {
-        TWO("2"), THREE("3"), FOUR("4"), FIVE("5"), SIX("6"),
-        QUEEN("Q"), JACK("J"), KING("K"), SEVEN("7"), ACE("A");
+        TWO("2", 1), THREE("3", 2), FOUR("4", 3), FIVE("5", 4), SIX("6", 5),
+        SEVEN("7", 6), EIGHT("8", 7), NINE("9", 8), TEN("10", 9),
+        JACK("J", 10), QUEEN("Q", 11), KING("K", 12), ACE("A", 13);
 
-        private final String key;
+        private final String key; // For messages
+        private final int value; // For checking which card is higher
 
-        Rank(String key) {
+        Rank(String key, int value) {
             this.key = key;
+            this.value = value;
         }
 
         public String getKey() {
             return this.key;
+        }
+
+        public int getValue() {
+            return this.value;
+        }
+
+        public Rank getByKey(String key) {
+            return Rank.valueOf(key);
         }
     }
 
@@ -47,13 +62,6 @@ public class Card {
     @Override
     public String toString() {
         return rank + " of " + suit;
-    }
-
-    public String toMessage() {
-        String ret = "CARD-";
-        ret += this.rank.getKey();
-        ret += this.suit.getKey();
-        return ret;
     }
 
     public int getValue() {
