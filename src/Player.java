@@ -2,10 +2,21 @@ import java.util.*;
 
 public class Player {
     private int points = 0;
-    private boolean dealer = false;
+    private boolean dealer;
     public boolean receivingCards = true;
     private List<Card> hand = new ArrayList<>();
+    private Game game;
     Scanner scanner = new Scanner(System.in);
+
+    public Player(Game game, boolean dealer) {
+        this.game = game;
+        this.dealer = dealer;
+
+    }
+
+    public int getPoints() {
+        return points;
+    }
 
     public void playCard(int index) {
 
@@ -19,26 +30,34 @@ public class Player {
         return false;
     }
 
-    public void gainPoints(ArrayList<Card> cards) {
+    public void gainPoints() {
+        var cards = game.getCardsPlayed();
         for (var card : cards) {
             points += card.getValue();
         }
         this.dealer = true;
         receivingCards = true;
         // End Game
-        // if(points >= 100)
+        if (points >= 100)
+            game.endGame();
     }
 
     public void receiveCard(Card card) {
         this.hand.add(card);
     }
 
-    public void roundStart(){
+    public void roundStart() {
         receivingCards = false;
+        // Se for dealer
+        if (dealer)
+            game.distributeCards();
     }
 
-    public void roundEnd(){
+    public void roundEnd() {
         receivingCards = true;
+        var highest = game.cardsPlayed.getFirst();
+        for (Card card : game.cardsPlayed) {
+        }
     }
 
     public void playTurn() {
@@ -49,7 +68,10 @@ public class Player {
             System.out.println("No cards left to play.");
             return;
         }
+        if(dealer)
+            System.out.println("You're first!");
 
+        game.printTable();
         System.out.println("Your hand:");
         for (int i = 0; i < hand.size(); i++) {
             Card c = hand.get(i);
@@ -71,6 +93,10 @@ public class Player {
         }
 
         Card playedCard = hand.remove(choice);
+        
+        if(dealer)
+            game.setCurrentSuit(playedCard.getSuit());
+
         System.out.println("You played: " + playedCard.getRank().getKey() + playedCard.getSuit().getKey());
 
         // joga carta, pontua e tal
@@ -78,7 +104,8 @@ public class Player {
         // no fim de sua vez, passa o bastao em Node
 
     }
-    public void endGame(){
+
+    public void endGame() {
         System.out.println("Game ended! You ended with " + Integer.toString(points) + " points.");
         scanner.close();
     }

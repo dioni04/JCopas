@@ -66,7 +66,7 @@ public class Card {
 
     public int getValue() {
         if (this.getRank() == Rank.QUEEN && this.getSuit() == Suit.SPADES)
-            return 10;
+            return 13;
         else if (this.getSuit() == Suit.HEARTS)
             return 1;
         return 0;

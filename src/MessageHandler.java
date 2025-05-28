@@ -14,46 +14,46 @@ public class MessageHandler {
             // NACK
             return;
         }
-        if (parsedMessage.getDest() != this.game.getNode().getId()) {
-            // Send along
-            game.getNode().sendMessage(message);
-            return;
+        //Se nao recebeu id ainda ou mensagem é pra este nodo
+        if (this.game.getNode().getId() == -1 || parsedMessage.getDest() != this.game.getNode().getId()) {
+            switch (parsedMessage.getContent().split("-")[0]) {
+                case "HELLO":
+                    handleHello(parsedMessage);
+                    break;
+                case "ID":
+                    message = handleID(parsedMessage);
+                    break;
+                case "START":
+                    handleGameStart(parsedMessage);
+                    break;
+                case "BATON":
+                    handleBaton(parsedMessage);
+                    break;
+                case "CARD":
+                    handleCard(parsedMessage);
+                    break;
+                case "POINTS":
+                    handlePoints(parsedMessage);
+                    break;
+                case "RBEGIN":
+                    handleRoundBegin(parsedMessage);
+                    break;
+                case "REND":
+                    handleRoundEnd(parsedMessage);
+                    break;
+                case "END":
+                    handleEnd(parsedMessage);
+                    break;
+                default:
+                    System.out.println("Unknown message type: " + parsedMessage.getContent());
+            }
         }
-        switch (parsedMessage.getContent().split("-")[0]) {
-            case "ACK":
-                handleAck(parsedMessage);
-                break;
-            case "HELLO":
-                handleHello(parsedMessage);
-                break;
-            case "START":
-                handleGameStart(parsedMessage);
-                break;
-            case "BATON":
-                handleBaton(parsedMessage);
-                break;
-            case "CARD":
-                handleCard(parsedMessage);
-                break;
-            case "POINTS":
-                handlePoints(parsedMessage);
-                break;
-            case "RBEGIN":
-                handleRoundBegin(parsedMessage);
-                break;
-            case "REND":
-                handleRoundEnd(parsedMessage);
-                break;
-            case "END":
-                handleEnd(parsedMessage);
-                break;
-            default:
-                System.out.println("Unknown message type: " + parsedMessage.getContent());
-        }
+        // Send along
+        game.getNode().sendMessage(message);
     }
 
     // Parse message from raw string
-    private Message parseMessage(String message) {
+    private static Message parseMessage(String message) {
         try {
             String[] parts = message.split("/");
             if (parts.length != 3)
@@ -69,36 +69,44 @@ public class MessageHandler {
         }
     }
 
-    // Individual message handling methods
-    private void handleAck(Message msg) {
-        System.out.println("Received ACK from Node " + msg.getSrc());
-    }
-
     private void handleHello(Message msg) {
         System.out.println("Received HELLO from Node " + msg.getSrc());
     }
 
+    private String handleID(Message msg) {
+        var details = msg.getContent().split("-")[1];
+        if (details == "1") {
+            System.out.println("Received ID from Node " + msg.getSrc());
+            game.getNode().setId(msg.getDest());
+            // Muda msg para invalida
+            var usedMessage = new Message(msg.getSrc(), msg.getDest(), Message.idMessage("0"));
+            return usedMessage.messageBuild();
+        }
+        return msg.messageBuild();
+    }
+
     private void handleGameStart(Message msg) {
         System.out.println("Game started by Node " + msg.getSrc());
-        game.startGame();
+        // game.startGame();
     }
 
     private void handleBaton(Message msg) {
         System.out.println("Baton received from Node " + msg.getSrc());
         game.getNode().receiveBaton();
+        game.getPlayer().playTurn();
     }
 
     private void handleCard(Message msg) {
         String cardDetails = msg.getContent().split("-")[1];
-        
+
         var suit = Card.Suit.getByKey(cardDetails.substring(0, 1));
         var rank = Card.Rank.getByKey(cardDetails.substring(1));
-        
+
         Card card = new Card(suit, rank);
+        System.out.println("Received card: " + card.toString() + " from Node " + msg.getSrc());
 
         if (game.getPlayer().receivingCards) {
-            game.getPlayer().receiveCard(card);           
-            System.out.println("Received card: " + cardDetails + " from Node " + msg.getSrc());
+            game.getPlayer().receiveCard(card);
             return;
         }
         game.cardsPlayed.add(card);
@@ -107,7 +115,7 @@ public class MessageHandler {
     private void handlePoints(Message msg) {
         int points = Integer.parseInt(msg.getContent().split("-")[1]);
         System.out.println("Received points: " + points + " from Node " + msg.getSrc());
-        game.updatePoints(points);
+        game.getPlayer().gainPoints();
     }
 
     private void handleRoundBegin(Message msg) {
@@ -117,8 +125,9 @@ public class MessageHandler {
 
     private void handleRoundEnd(Message msg) {
         System.out.println("Round ending.");
-        game.cardsPlayed.clear();
         game.getPlayer().roundEnd();
+        game.cardsPlayed.clear();
+        game.setCurrentSuit(null);
     }
 
     private void handleEnd(Message msg) {

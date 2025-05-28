@@ -8,7 +8,7 @@ public class Message {
     private String content;
 
     enum MessageType {
-        ACK("ACK"), HELLO("HELLO"), GAMESTART("START"),
+        HELLO("HELLO"), IDASSIGN("ID"), GAMESTART("START"),
         BATON("BATON"), CARD("CARD"), POINTS("POINTS"),
         ROUNDBEGIN("RBEGIN"), ROUNDEND("REND"), END("END");
 
@@ -41,19 +41,25 @@ public class Message {
         return content;
     }
 
-    public String cardMessage(Card card) {
+    public static String cardMessage(Card card) {
         String msg = MessageType.CARD.getKey() + "-";
         msg += card.getRank().getKey();
         msg += card.getSuit().getKey();
         return msg;
     }
 
-    public String pointsMessage(int points) {
+    public static String pointsMessage(int points) {
         String msg = MessageType.POINTS.getKey() + "-" + Integer.toString(points);
         return msg;
     }
 
-    public String simpleMessage(MessageType type) {
+    //Flag de validacao no final
+    public static String idMessage(String valid) {
+        String msg = MessageType.IDASSIGN.getKey() + "-" + valid;
+        return msg;
+    }
+
+    public static String simpleMessage(MessageType type) {
         String msg = type.getKey();
         return msg;
     }
