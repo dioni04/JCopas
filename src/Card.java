@@ -12,7 +12,7 @@ public class Card {
             return this.key;
         }
 
-        public Suit getByKey(String key) {
+        public static Suit getByKey(String key) {
             return Suit.valueOf(key);
         }
     }
@@ -38,7 +38,7 @@ public class Card {
             return this.value;
         }
 
-        public Rank getByKey(String key) {
+        public static Rank getByKey(String key) {
             return Rank.valueOf(key);
         }
     }

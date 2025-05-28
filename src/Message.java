@@ -1,11 +1,15 @@
+/*
+ * Format: {MESSAGE-CONTENT}/{SRC-ID}/{DEST-ID}
+ */
+
 public class Message {
     private int src;
     private int dest;
     private String content;
 
     enum MessageType {
-        ACK("ACK"), HELLO("HELLO"),
-        BATON("BATON"), CARD("CARD"), POINTS("POINTS"), 
+        ACK("ACK"), HELLO("HELLO"), GAMESTART("START"),
+        BATON("BATON"), CARD("CARD"), POINTS("POINTS"),
         ROUNDBEGIN("RBEGIN"), ROUNDEND("REND"), END("END");
 
         private final String key;
@@ -43,17 +47,18 @@ public class Message {
         msg += card.getSuit().getKey();
         return msg;
     }
-    public String pointsMessage(int points){
+
+    public String pointsMessage(int points) {
         String msg = MessageType.POINTS.getKey() + "-" + Integer.toString(points);
         return msg;
     }
 
-    public String simpleMessage(MessageType type){
+    public String simpleMessage(MessageType type) {
         String msg = type.getKey();
         return msg;
     }
 
-    public String messageBuild(){
+    public String messageBuild() {
         return content + "/" + Integer.toString(src) + "/" + Integer.toString(dest);
     }
 }

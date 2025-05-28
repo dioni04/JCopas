@@ -24,13 +24,15 @@ public class Network {
         private int nextNodePort;
         private boolean hasBaton;
         private DatagramSocket socket;
+        private Game game;
 
-        public Node(int port, int nextNodePort, String nextNodeIp, boolean isDealer) {
+        public Node(int port, int nextNodePort, String nextNodeIp, boolean isDealer, Game game) {
             this.ip = getLocalIP();
             this.port = port;
             this.nextNodeIp = nextNodeIp;
             this.nextNodePort = nextNodePort;
             this.hasBaton = isDealer;
+            this.game = game;
             try {
                 this.socket = new DatagramSocket(this.port);
                 System.out.println("Node initialized on port " + port);
@@ -45,6 +47,10 @@ public class Network {
             }
         }
 
+        public int getId() {
+            return id;
+        }
+        
         // Send message
         public void sendMessage(String message) {
             try {
@@ -55,17 +61,6 @@ public class Network {
                 System.out.println("Sent message to " + nextNodeIp + ":" + nextNodePort);
             } catch (IOException e) {
                 System.out.println("Error sending message: " + e.getMessage());
-            }
-        }
-
-        private void getMessageType(String message) {
-
-            // If is baton
-            if ("BATON".equals(message)) {
-                hasBaton = true;
-                System.out.println("Baton received. I can now play.");
-            } else if (hasBaton) {
-                
             }
         }
 
@@ -80,7 +75,7 @@ public class Network {
                     socket.receive(packet);
 
                     String message = new String(packet.getData(), 0, packet.getLength());
-                    getMessageType(message);
+                    game.handler.handleMessage(message);
                 }
             } catch (Exception e) {
                 System.err.println("Listening error: " + e.getMessage());
