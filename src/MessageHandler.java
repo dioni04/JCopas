@@ -1,9 +1,15 @@
+
 public class MessageHandler {
 
     private Game game;
 
     public MessageHandler(Game game) {
         this.game = game;
+    }
+
+    public void sendMessage( int dest, String content) {
+        var msg = new Message(game.getNode().getId(), dest, content);
+        game.getNode().sendMessage(msg.messageBuild());
     }
 
     // Main message handling method
@@ -14,7 +20,7 @@ public class MessageHandler {
             // NACK
             return;
         }
-        //Se nao recebeu id ainda ou mensagem é pra este nodo
+        // Se nao recebeu id ainda ou mensagem é pra este nodo
         if (this.game.getNode().getId() == -1 || parsedMessage.getDest() != this.game.getNode().getId()) {
             switch (parsedMessage.getContent().split("-")[0]) {
                 case "HELLO":
@@ -43,6 +49,9 @@ public class MessageHandler {
                     break;
                 case "END":
                     handleEnd(parsedMessage);
+                    break;
+                case "TRICKEND":
+                    handleTrickEnd(parsedMessage);
                     break;
                 default:
                     System.out.println("Unknown message type: " + parsedMessage.getContent());
@@ -79,7 +88,7 @@ public class MessageHandler {
             System.out.println("Received ID from Node " + msg.getSrc());
             game.getNode().setId(msg.getDest());
             // Muda msg para invalida
-            var usedMessage = new Message(msg.getSrc(), msg.getDest(), Message.idMessage("0"));
+            var usedMessage = new Message(msg.getSrc(), msg.getDest(), Message.idMessage(false));
             return usedMessage.messageBuild();
         }
         return msg.messageBuild();
@@ -109,12 +118,20 @@ public class MessageHandler {
             game.getPlayer().receiveCard(card);
             return;
         }
+        if(game.cardsPlayed.isEmpty())
+            game.setCurrentSuit(suit);
         game.cardsPlayed.add(card);
+        if(game.cardsPlayed.size() == game.numPlayers){
+            //Broadcast Trick end
+            for (var node : game.getNeighbors()) {
+                sendMessage(node.getId(), Message.simpleMessage(Message.MessageType.TRICKEND));
+            }
+        }
+
     }
 
     private void handlePoints(Message msg) {
-        int points = Integer.parseInt(msg.getContent().split("-")[1]);
-        System.out.println("Received points: " + points + " from Node " + msg.getSrc());
+        System.out.println("Received points from Node " + msg.getSrc());
         game.getPlayer().gainPoints();
     }
 
@@ -127,11 +144,22 @@ public class MessageHandler {
         System.out.println("Round ending.");
         game.getPlayer().roundEnd();
         game.cardsPlayed.clear();
-        game.setCurrentSuit(null);
     }
 
     private void handleEnd(Message msg) {
         System.out.println("Game over. Finalizing...");
         game.getPlayer().endGame();
+    }
+
+    private void handleTrickEnd(Message msg) {
+        System.out.println("Trick ending.");
+        game.getPlayer().trickEnd();
+        game.setCurrentSuit(null);
+    }
+
+    public void broadcastSimpleMessage(Message.MessageType type) {
+        for (var node : game.getNeighbors()) {
+            game.handler.sendMessage(node.getId(), Message.simpleMessage(type));
+        }
     }
 }

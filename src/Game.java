@@ -20,7 +20,6 @@ public class Game {
 
     public Game(int port, int nextNodePort, String nextNodeIp, boolean isDealer) {
         this.node = new Node(port, nextNodePort, nextNodeIp, isDealer, this);
-        this.node.setId(0);
         this.handler = new MessageHandler(this);
         this.player = new Player(this, isDealer);
         if(isDealer)
@@ -31,6 +30,18 @@ public class Game {
         return node;
     }
 
+    public int getId(){
+        return node.getId();
+    }
+
+    public int getNextNode(){
+        return (node.getId() + 1) % numPlayers;
+    }
+
+    public List<Node> getNeighbors() {
+        return neighbors;
+    }
+    
     public Player getPlayer() {
         return player;
     }
@@ -42,12 +53,19 @@ public class Game {
     public void setCurrentSuit(Card.Suit currentSuit) {
         this.currentSuit = currentSuit;
     }
+    
+    public Card.Suit getCurrentSuit() {
+        return currentSuit;
+    }
 
     private void assignIDs(){
         for(int i = 1; i < numPlayers; i++){
-            var msg = new Message(0, i, Message.idMessage("1"));
-            node.sendMessage(msg.messageBuild());
+            handler.sendMessage(i, Message.idMessage(true));
         }
+    }
+
+    public void addNeighbor(Node neighbor) {
+        this.neighbors.add(neighbor);
     }
 
     public static List<Card> createShuffledDeck() {
@@ -71,8 +89,7 @@ public class Game {
         for (var node : neighbors) {
             for (int i = 0; i < cardPerPlayer; i++) {
                 var card = cards.removeLast();
-                var msg = new Message(node.getId(), i, Message.cardMessage(card));
-                node.sendMessage(msg.messageBuild());
+                handler.sendMessage(node.getId(), Message.cardMessage(card));
             }
         }
         // Resto das cartas para dealer

@@ -57,7 +57,7 @@ public class Node {
             InetAddress address = InetAddress.getByName(nextNodeIp);
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, nextNodePort);
             socket.send(packet);
-            System.out.println("Sent message to " + nextNodeIp + ":" + nextNodePort);
+            System.out.println("Sent message " + message + " to " + nextNodeIp + ":" + nextNodePort);
         } catch (IOException e) {
             System.out.println("Error sending message: " + e.getMessage());
         }

@@ -10,7 +10,8 @@ public class Message {
     enum MessageType {
         HELLO("HELLO"), IDASSIGN("ID"), GAMESTART("START"),
         BATON("BATON"), CARD("CARD"), POINTS("POINTS"),
-        ROUNDBEGIN("RBEGIN"), ROUNDEND("REND"), END("END");
+        ROUNDBEGIN("RBEGIN"), ROUNDEND("REND"), END("END"),
+        TRICKEND("TRICKEND");
 
         private final String key;
 
@@ -54,8 +55,9 @@ public class Message {
     }
 
     //Flag de validacao no final
-    public static String idMessage(String valid) {
-        String msg = MessageType.IDASSIGN.getKey() + "-" + valid;
+    public static String idMessage(boolean valid) {
+        String end = valid ? "1" : "0";
+        String msg = MessageType.IDASSIGN.getKey() + "-" + end;
         return msg;
     }
 
