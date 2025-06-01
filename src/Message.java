@@ -54,13 +54,6 @@ public class Message {
         return msg;
     }
 
-    //Flag de validacao no final
-    public static String idMessage(boolean valid) {
-        String end = valid ? "1" : "0";
-        String msg = MessageType.IDASSIGN.getKey() + "-" + end;
-        return msg;
-    }
-
     public static String simpleMessage(MessageType type) {
         String msg = type.getKey();
         return msg;

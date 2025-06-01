@@ -10,7 +10,6 @@ public class Game {
 
     public List<Card> cards = new ArrayList<>();
     public List<Card> cardsPlayed = new ArrayList<>();
-    private List<Node> neighbors = new ArrayList<>();
 
     private Player player;
     private Node node;
@@ -21,12 +20,12 @@ public class Game {
     public Game(int port, int nextNodePort, String nextNodeIp, boolean isDealer) {
         this.node = new Node(port, nextNodePort, nextNodeIp, isDealer, this);
         new Thread(() -> node.listen()).start();
-        
+
         this.handler = new MessageHandler(this);
         this.player = new Player(this, isDealer);
-        if(isDealer){
-            try { Thread.sleep(1000); } catch (InterruptedException e) {} //Espera um pouco para outros nodos
-            assignIDs();
+
+        if (isDealer) {
+            node.assignIDs();
             distributeCards();
             handler.broadcastMessage(Message.MessageType.ROUNDBEGIN);
             player.roundStart();
@@ -37,18 +36,14 @@ public class Game {
         return node;
     }
 
-    public int getId(){
+    public int getId() {
         return node.getId();
     }
 
-    public int getNextNode(){
+    public int getNextNode() {
         return (node.getId() + 1) % numPlayers;
     }
 
-    public List<Node> getNeighbors() {
-        return neighbors;
-    }
-    
     public Player getPlayer() {
         return player;
     }
@@ -60,19 +55,9 @@ public class Game {
     public void setCurrentSuit(Card.Suit currentSuit) {
         this.currentSuit = currentSuit;
     }
-    
+
     public Card.Suit getCurrentSuit() {
         return currentSuit;
-    }
-
-    private void assignIDs(){
-        for(int i = 1; i < numPlayers; i++){
-            handler.sendMessage(i, Message.idMessage(true));
-        }
-    }
-
-    public void addNeighbor(Node neighbor) {
-        this.neighbors.add(neighbor);
     }
 
     public static List<Card> createShuffledDeck() {
@@ -92,17 +77,21 @@ public class Game {
         cards.clear();
         cards = createShuffledDeck();
 
-        // Manda cartas para cada nodo
-        for (var node : neighbors) {
-            for (int i = 0; i < cardPerPlayer; i++) {
-                var card = cards.removeLast();
-                handler.sendMessage(node.getId(), Message.cardMessage(card));
+        int cardIndex = 0;
+
+        while (cardIndex < numCards) {
+            int targetId = cardIndex % numPlayers;
+            Card card = cards.removeLast();
+
+            if (targetId == getId()) {
+                player.receiveCard(card); // Give it to self
+            } else {
+                handler.sendMessage(targetId, Message.cardMessage(card));
             }
+
+            cardIndex++;
         }
-        // Resto das cartas para dealer
-        for (Card card : cards) {
-            this.player.receiveCard(card);
-        }
+
         cards.clear();
     }
 

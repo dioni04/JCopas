@@ -4,6 +4,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+
 public class Node {
     private int id;
     private String ip;
@@ -11,6 +12,8 @@ public class Node {
     private String nextNodeIp;
     private int nextNodePort;
     private boolean hasBaton;
+    public boolean connected = false;
+    public int connections = 1;
     private boolean gameEnded = false;
     private DatagramSocket socket;
     private Game game;
@@ -23,18 +26,15 @@ public class Node {
         this.hasBaton = isDealer;
         this.game = game;
         this.id = -1;
-        
+
         try {
             this.socket = new DatagramSocket(this.port);
             System.out.println("Node initialized on port " + port);
-            handshake();
         } catch (IOException e) {
             System.err.println("Error initializing socket: " + e.getMessage());
         }
         if (isDealer) {
             id = 0;
-            System.out.println("Starting as dealer, sending first baton...");
-            sendMessage(Message.MessageType.BATON.getKey());
         }
     }
 
@@ -81,40 +81,20 @@ public class Node {
         }
     }
 
-    private void handshake() {
-        boolean acknowledged = false;
-        int attempts = 0;
-        int maxAttempts = 3;
-
-        while (!acknowledged && attempts < maxAttempts) {
+    public void assignIDs() {
+        for (int i = 1; i < game.numPlayers; i++) {
+            game.handler.sendMessage(i, Message.simpleMessage(Message.MessageType.IDASSIGN));
+        }
+        //espera conexao
+        while (connections < game.numPlayers) {
             try {
-                // Send HELLO message to the next node
-                sendMessage(Message.MessageType.HELLO.getKey());
-
-                // Wait for ACK
-                socket.setSoTimeout(1000); // 1 second timeout for response
-                byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-
-                try {
-                    socket.receive(packet);
-                    String response = new String(packet.getData(), 0, packet.getLength());
-                    if ("ACK".equals(response)) {
-                        acknowledged = true;
-                        System.out.println("Handshake successful with " + nextNodeIp + ":" + nextNodePort);
-                    }
-                } catch (IOException e) {
-                    System.out.println("No response from " + nextNodeIp + ":" + nextNodePort + ". Retrying...");
-                    attempts++;
-                }
-            } catch (IOException e) {
-                System.err.println("Error during handshake: " + e.getMessage());
+                Thread.sleep(100); 
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
-
-        if (!acknowledged) {
-            System.err.println("Failed to establish connection with " + nextNodeIp + ":" + nextNodePort);
-        }
+        connected = true;
+        System.out.println("All nodes assigned. IDs confirmed.");
     }
 
     public void receiveBaton() {
