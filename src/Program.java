@@ -11,7 +11,6 @@ public class Program {
         int nextNodePort = Integer.parseInt(args[2]);
         boolean isDealer = (args.length > 3) && "1".equalsIgnoreCase(args[3]);
 
-        Game machine = new Game(port, nextNodePort, nextNodeIp, isDealer);
-        machine.getNode().listen();
+        new Game(port, nextNodePort, nextNodeIp, isDealer);
     }
 }

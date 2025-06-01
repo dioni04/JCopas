@@ -20,10 +20,17 @@ public class Game {
 
     public Game(int port, int nextNodePort, String nextNodeIp, boolean isDealer) {
         this.node = new Node(port, nextNodePort, nextNodeIp, isDealer, this);
+        new Thread(() -> node.listen()).start();
+        
         this.handler = new MessageHandler(this);
         this.player = new Player(this, isDealer);
-        if(isDealer)
+        if(isDealer){
+            try { Thread.sleep(1000); } catch (InterruptedException e) {} //Espera um pouco para outros nodos
             assignIDs();
+            distributeCards();
+            handler.broadcastMessage(Message.MessageType.ROUNDBEGIN);
+            player.roundStart();
+        }
     }
 
     public Node getNode() {
@@ -96,6 +103,7 @@ public class Game {
         for (Card card : cards) {
             this.player.receiveCard(card);
         }
+        cards.clear();
     }
 
     public void printTable() {
@@ -113,6 +121,7 @@ public class Game {
         else
             System.out.println("You won!");
         System.out.println("Ended with " + points + " points.");
+        player.endGame();
         node.setGameEnded(true);
     }
 }

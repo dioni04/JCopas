@@ -6,7 +6,7 @@ public class Player {
     public boolean receivingCards = true;
     private List<Card> scores = new ArrayList<>();
     private List<Card> hand = new ArrayList<>();
-    private Card lastPlayed;
+    private Card lastPlayed = null;
     private Game game;
     Scanner scanner = new Scanner(System.in);
 
@@ -39,7 +39,7 @@ public class Player {
         receivingCards = true;
         // End Game
         if (points >= 100) {
-            game.handler.broadcastSimpleMessage(Message.MessageType.END);
+            game.handler.broadcastMessage(Message.MessageType.END);
             game.endGame();
         }
     }
@@ -51,8 +51,9 @@ public class Player {
     public void roundStart() {
         receivingCards = false;
         // Se for dealer
-        if (dealer)
-            game.distributeCards();
+        if (dealer){
+            playTurn();
+        }
     }
 
     public Card findHighestCard() {
@@ -64,7 +65,7 @@ public class Player {
         return high;
     }
 
-    public void trickEnd() {
+    public void trickEnd(boolean rend) {
         if (this.lastPlayed == findHighestCard()) {
             for (Card card : game.getCardsPlayed()) {
                 scores.add(card);
@@ -72,6 +73,13 @@ public class Player {
             dealer = true;
         } else
             dealer = false;
+
+        lastPlayed = null;
+        game.setCurrentSuit(null);
+        game.cardsPlayed.clear();
+        if (!rend && dealer) {
+            playTurn();
+        }
     }
 
     public boolean hasSuit(Card.Suit suit) {
@@ -84,7 +92,12 @@ public class Player {
 
     public void roundEnd() {
         receivingCards = true;
-        trickEnd();
+        trickEnd(true);
+        gainPoints();
+        if (dealer) {
+            game.distributeCards();
+        }
+        roundStart();
     }
 
     public void printHand() {
@@ -110,12 +123,14 @@ public class Player {
 
         if (hand.isEmpty()) {
             System.out.println("No cards left to play.");
-            game.handler.broadcastSimpleMessage(Message.MessageType.ROUNDEND);
+            game.handler.broadcastMessage(Message.MessageType.ROUNDEND);
+            roundEnd();
             return;
         }
-        if (game.getCardsPlayed().size() == game.numPlayers) {
-            game.handler.broadcastSimpleMessage(Message.MessageType.TRICKEND);
-            trickEnd();
+        if (game.cardsPlayed.size() == game.numPlayers) {
+            game.handler.broadcastMessage(Message.MessageType.TRICKEND);
+            trickEnd(false);
+            return;
         }
 
         if (dealer)
@@ -150,9 +165,9 @@ public class Player {
             game.setCurrentSuit(playedCard.getSuit());
 
         System.out.println("You played: " + playedCard.getRank().getKey() + playedCard.getSuit().getKey());
+        this.lastPlayed = playedCard;
 
-        game.handler.sendMessage(game.getNextNode(), Message.cardMessage(playedCard));
-
+        game.handler.broadcastMessage(playedCard);
         // joga carta, pontua e tal
 
         // no fim de sua vez, passa o bastao em Node
@@ -161,7 +176,6 @@ public class Player {
     }
 
     public void endGame() {
-        System.out.println("Game ended! You ended with " + Integer.toString(points) + " points.");
         scanner.close();
     }
 }

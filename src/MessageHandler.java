@@ -83,8 +83,8 @@ public class MessageHandler {
     }
 
     private String handleID(Message msg) {
-        var details = msg.getContent().split("-")[1];
-        if (details == "1") {
+        var valid = msg.getContent().split("-")[1];
+        if (valid == "1") {
             System.out.println("Received ID from Node " + msg.getSrc());
             game.getNode().setId(msg.getDest());
             // Muda msg para invalida
@@ -121,13 +121,6 @@ public class MessageHandler {
         if(game.cardsPlayed.isEmpty())
             game.setCurrentSuit(suit);
         game.cardsPlayed.add(card);
-        if(game.cardsPlayed.size() == game.numPlayers){
-            //Broadcast Trick end
-            for (var node : game.getNeighbors()) {
-                sendMessage(node.getId(), Message.simpleMessage(Message.MessageType.TRICKEND));
-            }
-        }
-
     }
 
     private void handlePoints(Message msg) {
@@ -143,23 +136,29 @@ public class MessageHandler {
     private void handleRoundEnd(Message msg) {
         System.out.println("Round ending.");
         game.getPlayer().roundEnd();
-        game.cardsPlayed.clear();
     }
 
     private void handleEnd(Message msg) {
         System.out.println("Game over. Finalizing...");
-        game.getPlayer().endGame();
+        game.endGame();
     }
 
     private void handleTrickEnd(Message msg) {
         System.out.println("Trick ending.");
-        game.getPlayer().trickEnd();
-        game.setCurrentSuit(null);
+        
+        game.getPlayer().trickEnd(false);
     }
 
-    public void broadcastSimpleMessage(Message.MessageType type) {
+    public void broadcastMessage(Message.MessageType type) {
         for (var node : game.getNeighbors()) {
             game.handler.sendMessage(node.getId(), Message.simpleMessage(type));
         }
     }
+
+    public void broadcastMessage(Card card){
+        for (var node : game.getNeighbors()) {
+            game.handler.sendMessage(node.getId(), Message.cardMessage(card));
+        }
+    }
+
 }
