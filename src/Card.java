@@ -13,7 +13,11 @@ public class Card {
         }
 
         public static Suit getByKey(String key) {
-            return Suit.valueOf(key);
+            for (Suit s : values()) {
+                if (s.getKey().equals(key))
+                    return s;
+            }
+            throw new IllegalArgumentException("Invalid suit key: " + key);
         }
     }
 
@@ -39,7 +43,11 @@ public class Card {
         }
 
         public static Rank getByKey(String key) {
-            return Rank.valueOf(key);
+            for (Rank r : values()) {
+                if (r.getKey().equals(key))
+                    return r;
+            }
+            throw new IllegalArgumentException("Invalid rank key: " + key);
         }
     }
 

@@ -86,7 +86,7 @@ public class Game {
             if (targetId == getId()) {
                 player.receiveCard(card); // Give it to self
             } else {
-                handler.sendMessage(targetId, Message.cardMessage(card));
+                handler.createAndSendMessage(targetId, Message.cardMessage(card));
             }
 
             cardIndex++;
@@ -96,7 +96,7 @@ public class Game {
     }
 
     public void printTable() {
-        System.out.println("Cards Played :");
+        System.out.println("Cards Played:");
 
         for (Card card : cardsPlayed) {
             System.out.println(card.toString());

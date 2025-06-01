@@ -4,7 +4,7 @@ JAVAC = javac
 JAVA = java
 SRC = src/
 BIN = out
-MAIN = your.package.here.Program
+MAIN = Program
 
 # Compile all .java files
 compile:

@@ -45,6 +45,7 @@ public class Message {
     public static String cardMessage(Card card) {
         String msg = MessageType.CARD.getKey() + "-";
         msg += card.getRank().getKey();
+        msg += "_";
         msg += card.getSuit().getKey();
         return msg;
     }
@@ -56,6 +57,13 @@ public class Message {
 
     public static String simpleMessage(MessageType type) {
         String msg = type.getKey();
+        return msg;
+    }
+
+    //Flag de validacao no final
+    public static String idMessage(boolean valid) {
+        String end = valid ? "1" : "0";
+        String msg = MessageType.IDASSIGN.getKey() + "-" + end;
         return msg;
     }
 

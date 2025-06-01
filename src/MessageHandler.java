@@ -7,30 +7,42 @@ public class MessageHandler {
         this.game = game;
     }
 
-    public void sendMessage(int dest, String content) {
+    public void createAndSendMessage(int dest, String content) {
         var msg = new Message(game.getNode().getId(), dest, content);
+        if (Program.DEBUG)
+            System.out.println("Sent message " + msg.messageBuild() + " to " + game.getNode().getNextNodeIp() + ":"
+                    + game.getNode().getNextNodePort());
         game.getNode().sendMessage(msg.messageBuild());
     }
 
     public void handleMessage(String message) {
         Message parsedMessage = parseMessage(message);
         if (parsedMessage == null) {
-            System.out.println("Invalid message format");
+            System.err.println("Invalid message format");
             return;
         }
 
         boolean isBroadcast = parsedMessage.getDest() == -1;
         boolean isForMe = parsedMessage.getDest() == game.getId();
         boolean isSetupPhase = !game.getNode().connected || game.getId() == -1;
+        boolean isFromMe = parsedMessage.getSrc() == game.getId();
+
+        // Send along if not full loop
+        if (!isSetupPhase && !isFromMe) {
+            game.getNode().sendMessage(message);
+        }
 
         // Se nao recebeu id ainda ou mensagem é pra este nodo
-        if (isSetupPhase || isForMe || isBroadcast) {
+        if (isSetupPhase || isForMe || (isBroadcast && !isFromMe)) {
+            if (Program.DEBUG)
+                System.out.println("Received Message: " + message);
+
             switch (parsedMessage.getContent().split("-")[0].trim()) {
                 case "HELLO":
                     handleHello(parsedMessage);
                     break;
                 case "ID":
-                    handleID(parsedMessage);
+                    message = handleID(parsedMessage);
                     break;
                 case "START":
                     handleGameStart(parsedMessage);
@@ -57,12 +69,13 @@ public class MessageHandler {
                     handleTrickEnd(parsedMessage);
                     break;
                 default:
-                    System.out.println("Unknown message type: " + parsedMessage.getContent());
+                    System.err.println("Unknown message type: " + parsedMessage.getContent());
             }
         }
-        // Send along if not full loop
-        if (parsedMessage.getSrc() != game.getId())
+        // Mensagem precisa ser depois em conexao inicial por causa de Assign de IDs
+        if (isSetupPhase && !isFromMe)
             game.getNode().sendMessage(message);
+
     }
 
     // Parse message from raw string
@@ -86,24 +99,36 @@ public class MessageHandler {
         System.out.println("Received HELLO from Node " + msg.getSrc());
     }
 
-    private void handleID(Message msg) {
+    private String handleID(Message msg) {
         if (game.getId() == 0) {
             game.getNode().connections++;
-            return;
+            return msg.messageBuild();
         }
-        System.out.println("Received ID from Node " + msg.getSrc());
-        game.getNode().connected = true;
-        game.getNode().setId(msg.getDest());
-        return;
+
+        var valid = msg.getContent().split("-")[1];
+        if (valid.equals("1")) {
+            game.getNode().connected = true;
+            game.getNode().setId(msg.getDest());
+            // Muda msg para invalida
+            var usedMessage = new Message(msg.getSrc(), msg.getDest(), Message.idMessage(false));
+            if (Program.DEBUG)
+
+                System.out.println("Received ID " + msg.getDest() + " from Node " + msg.getSrc());
+
+            return usedMessage.messageBuild();
+        }
+        return msg.messageBuild();
     }
 
     private void handleGameStart(Message msg) {
-        System.out.println("Game started by Node " + msg.getSrc());
+        if (Program.DEBUG)
+            System.out.println("Game started by Node " + msg.getSrc());
         // game.startGame();
     }
 
     private void handleBaton(Message msg) {
-        System.out.println("Baton received from Node " + msg.getSrc());
+        if (Program.DEBUG)
+            System.out.println("Baton received from Node " + msg.getSrc());
         game.getNode().receiveBaton();
         game.getPlayer().playTurn();
     }
@@ -111,11 +136,12 @@ public class MessageHandler {
     private void handleCard(Message msg) {
         String cardDetails = msg.getContent().split("-")[1];
 
-        var suit = Card.Suit.getByKey(cardDetails.substring(0, 1));
-        var rank = Card.Rank.getByKey(cardDetails.substring(1));
+        var rank = Card.Rank.getByKey(cardDetails.split("_")[0]);
+        var suit = Card.Suit.getByKey(cardDetails.split("_")[1]);
 
         Card card = new Card(suit, rank);
-        System.out.println("Received card: " + card.toString() + " from Node " + msg.getSrc());
+        if (Program.DEBUG)
+            System.out.println("Received card: " + card.toString() + " from Node " + msg.getSrc());
 
         if (game.getPlayer().receivingCards) {
             game.getPlayer().receiveCard(card);
@@ -127,7 +153,8 @@ public class MessageHandler {
     }
 
     private void handlePoints(Message msg) {
-        System.out.println("Received points from Node " + msg.getSrc());
+        if (Program.DEBUG)
+            System.out.println("Received points from Node " + msg.getSrc());
         game.getPlayer().gainPoints();
     }
 
@@ -153,11 +180,11 @@ public class MessageHandler {
     }
 
     public void broadcastMessage(Message.MessageType type) {
-        game.handler.sendMessage(-1, Message.simpleMessage(type));
+        game.handler.createAndSendMessage(-1, Message.simpleMessage(type));
     }
 
     public void broadcastMessage(Card card) {
-        game.handler.sendMessage(-1, Message.cardMessage(card));
+        game.handler.createAndSendMessage(-1, Message.cardMessage(card));
     }
 
 }

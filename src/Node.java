@@ -4,7 +4,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-
 public class Node {
     private int id;
     private String ip;
@@ -29,7 +28,8 @@ public class Node {
 
         try {
             this.socket = new DatagramSocket(this.port);
-            System.out.println("Node initialized on port " + port);
+            if (Program.DEBUG)
+                System.out.println("Node initialized on port " + port);
         } catch (IOException e) {
             System.err.println("Error initializing socket: " + e.getMessage());
         }
@@ -50,6 +50,14 @@ public class Node {
         return id;
     }
 
+    public String getNextNodeIp() {
+        return nextNodeIp;
+    }
+
+    public int getNextNodePort() {
+        return nextNodePort;
+    }
+
     // Send message
     public void sendMessage(String message) {
         try {
@@ -57,16 +65,16 @@ public class Node {
             InetAddress address = InetAddress.getByName(nextNodeIp);
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, nextNodePort);
             socket.send(packet);
-            System.out.println("Sent message " + message + " to " + nextNodeIp + ":" + nextNodePort);
         } catch (IOException e) {
-            System.out.println("Error sending message: " + e.getMessage());
+            System.err.println("Error sending message: " + e.getMessage());
         }
     }
 
     // Listen for message
     public void listen() {
         try {
-            System.out.println("Node listening on port " + port);
+            if (Program.DEBUG)
+                System.out.println("Node listening on port " + port);
 
             while (!gameEnded) {
                 byte[] buffer = new byte[1024];
@@ -78,23 +86,25 @@ public class Node {
             }
         } catch (Exception e) {
             System.err.println("Listening error: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     public void assignIDs() {
         for (int i = 1; i < game.numPlayers; i++) {
-            game.handler.sendMessage(i, Message.simpleMessage(Message.MessageType.IDASSIGN));
+            game.handler.createAndSendMessage(i, Message.idMessage(true));
         }
-        //espera conexao
+        // espera conexao
         while (connections < game.numPlayers) {
             try {
-                Thread.sleep(100); 
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
         connected = true;
-        System.out.println("All nodes assigned. IDs confirmed.");
+        if (Program.DEBUG)
+            System.out.println("All nodes assigned. IDs confirmed.");
     }
 
     public void receiveBaton() {
