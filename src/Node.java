@@ -2,15 +2,12 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 public class Node {
     private int id;
-    private String ip;
     private int port;
     private String nextNodeIp;
     private int nextNodePort;
-    private boolean hasBaton;
     public boolean connected = false;
     public int connections = 1;
     private boolean gameEnded = false;
@@ -18,11 +15,9 @@ public class Node {
     private Game game;
 
     public Node(int port, int nextNodePort, String nextNodeIp, boolean isDealer, Game game) {
-        this.ip = getLocalIP();
         this.port = port;
         this.nextNodeIp = nextNodeIp;
         this.nextNodePort = nextNodePort;
-        this.hasBaton = isDealer;
         this.game = game;
         this.id = -1;
 
@@ -72,6 +67,7 @@ public class Node {
 
     // Listen for message
     public void listen() {
+        System.out.println("Listening...");
         try {
             if (Program.DEBUG)
                 System.out.println("Node listening on port " + port);
@@ -91,40 +87,22 @@ public class Node {
     }
 
     public void assignIDs() {
-        for (int i = 1; i < game.numPlayers; i++) {
-            game.handler.createAndSendMessage(i, Message.idMessage(true));
-        }
+        System.out.println("Establishing connection...");
         // espera conexao
         while (connections < game.numPlayers) {
             try {
-                Thread.sleep(100);
+                for (int i = 1; i < game.numPlayers; i++) {
+                    game.handler.createAndSendMessage(i, Message.idMessage(true));
+                }
+                Thread.sleep(750);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        connected = true;
         if (Program.DEBUG)
             System.out.println("All nodes assigned. IDs confirmed.");
+        game.handler.broadcastMessage(Message.MessageType.CONNECTED);
+        connected = true;
     }
 
-    public void receiveBaton() {
-        hasBaton = true;
-
-    }
-
-    public void passBaton() {
-        hasBaton = false;
-        var msg = new Message(this.id, this.id + 1, Message.MessageType.BATON.getKey());
-        sendMessage(msg.messageBuild());
-    }
-
-    public static String getLocalIP() {
-        try {
-            InetAddress localHost = InetAddress.getLocalHost();
-            return localHost.getHostAddress();
-        } catch (UnknownHostException e) {
-            System.err.println("Unable to get local IP address: " + e.getMessage());
-            return "127.0.0.1"; // Fallback to localhost
-        }
-    }
 }

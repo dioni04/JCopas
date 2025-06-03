@@ -8,10 +8,10 @@ public class Message {
     private String content;
 
     enum MessageType {
-        HELLO("HELLO"), IDASSIGN("ID"), GAMESTART("START"),
-        BATON("BATON"), CARD("CARD"), POINTS("POINTS"),
+        IDASSIGN("ID"),
+        BATON("BATON"), CARD("CARD"),
         ROUNDBEGIN("RBEGIN"), ROUNDEND("REND"), END("END"),
-        TRICKEND("TRICKEND");
+        TRICKEND("TRICKEND"), CONNECTED("CONNECTED");
 
         private final String key;
 
@@ -47,11 +47,6 @@ public class Message {
         msg += card.getRank().getKey();
         msg += "_";
         msg += card.getSuit().getKey();
-        return msg;
-    }
-
-    public static String pointsMessage(int points) {
-        String msg = MessageType.POINTS.getKey() + "-" + Integer.toString(points);
         return msg;
     }
 

@@ -1,5 +1,6 @@
 public class Program {
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
+    public static final boolean AUTO = false;
 
     public static void main(String[] args) {
         if (args.length < 3) {

@@ -13,7 +13,7 @@ public class Game {
 
     private Player player;
     private Node node;
-    private Card.Suit currentSuit;
+    private Card.Suit currentSuit = null;
 
     public MessageHandler handler;
 
