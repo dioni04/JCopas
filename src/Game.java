@@ -81,7 +81,7 @@ public class Game {
 
         while (cardIndex < numCards) {
             int targetId = cardIndex % numPlayers;
-            Card card = cards.removeLast();
+            Card card = cards.remove(0);
 
             if (targetId == getId()) {
                 player.receiveCard(card); // Give it to self
