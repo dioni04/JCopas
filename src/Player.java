@@ -33,10 +33,13 @@ public class Player {
     }
 
     public void gainPoints() {
+        int p = 0;
         for (var card : scores) {
-            points += card.getValue();
+            p += card.getValue();
         }
-        receivingCards = true;
+        scores.clear();
+        points += p;
+        System.out.printf("You won %d points.\nTotal: %d points\n", p, points);
         // End Game
         if (points >= 100) {
             game.handler.broadcastMessage(Message.MessageType.END);
@@ -45,13 +48,14 @@ public class Player {
     }
 
     public void receiveCard(Card card) {
+        System.out.println("Received card: " + card.toString());
         this.hand.add(card);
     }
 
     public void roundStart() {
         receivingCards = false;
         // Se for dealer
-        if (dealer){
+        if (dealer) {
             playTurn();
         }
     }
@@ -67,6 +71,7 @@ public class Player {
 
     public void trickEnd(boolean rend) {
         if (this.lastPlayed == findHighestCard()) {
+            System.out.println("Your card " + lastPlayed.toString() + " was highest, adding cards to scores...");
             for (Card card : game.getCardsPlayed()) {
                 scores.add(card);
             }
@@ -77,6 +82,7 @@ public class Player {
         lastPlayed = null;
         game.setCurrentSuit(null);
         game.cardsPlayed.clear();
+
         if (!rend && dealer) {
             playTurn();
         }
@@ -93,11 +99,25 @@ public class Player {
     public void roundEnd() {
         receivingCards = true;
         trickEnd(true);
+        System.out.println("Round end!");
         gainPoints();
+        hand.clear();
+        if (Program.DEBUG) {
+            System.out.println("DEBUG mode, press ENTER to continue");
+            scanner.nextLine();
+        }
+        if (Program.AUTO)
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         if (dealer) {
             game.distributeCards();
+            game.handler.broadcastMessage(Message.MessageType.ROUNDBEGIN);
+            roundStart();
         }
-        roundStart();
+
     }
 
     public void printHand() {
@@ -112,11 +132,30 @@ public class Player {
         }
         String notValid = hasSuit(game.getCurrentSuit()) ? " [Invalid]" : " [Discard]";
         for (Card card : hand) {
-            if (game.getCurrentSuit() == card.getSuit())
+            if (game.getCurrentSuit() != card.getSuit())
                 System.out.println(i + ": " + card.toString() + notValid);
-            System.out.println(i + ": " + card.toString());
+            else
+                System.out.println(i + ": " + card.toString());
             i++;
         }
+    }
+
+    //Acha primeira carta valida para jogar, usado com flag AUTO
+    private int getFirstValid() {
+        int i = 0;
+        var suit = game.getCurrentSuit();
+
+        if (suit != null) {
+            if (!hasSuit(suit))
+                return 0;
+            for (Card card : hand) {
+                if (card.getSuit() == suit)
+                    return i;
+                i++;
+            }
+        }
+
+        return 0;
     }
 
     public void playTurn() {
@@ -128,6 +167,7 @@ public class Player {
             return;
         }
         if (game.cardsPlayed.size() == game.numPlayers) {
+            System.out.println("All players played, ending trick.");
             game.handler.broadcastMessage(Message.MessageType.TRICKEND);
             trickEnd(false);
             return;
@@ -145,8 +185,14 @@ public class Player {
         boolean valid = false;
         var suit = game.getCurrentSuit();
 
+        System.out.print("Choose a card to play (enter the index): ");
+
+        if (Program.AUTO) {
+            valid = true;
+            choice = getFirstValid();
+        }
+
         while (!valid) {
-            System.out.print("Choose a card to play (enter the index): ");
             try {
                 choice = Integer.parseInt(scanner.nextLine());
                 if (choice < 0 || choice >= hand.size()
@@ -161,17 +207,17 @@ public class Player {
 
         Card playedCard = hand.remove(choice);
 
-        if (dealer)
+        if (game.getCardsPlayed().isEmpty())
             game.setCurrentSuit(playedCard.getSuit());
 
-        System.out.println("You played: " + playedCard.getRank().getKey() + playedCard.getSuit().getKey());
+        System.out.println("You played: " + playedCard.toString());
         this.lastPlayed = playedCard;
-
         game.handler.broadcastMessage(playedCard);
+        game.getCardsPlayed().add(playedCard);
         // joga carta, pontua e tal
 
         // no fim de sua vez, passa o bastao em Node
-        game.handler.sendMessage(game.getNextNode(), Message.MessageType.BATON.getKey());
+        game.handler.createAndSendMessage(game.getNextNode(), Message.MessageType.BATON.getKey());
 
     }
 

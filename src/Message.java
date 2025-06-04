@@ -8,10 +8,10 @@ public class Message {
     private String content;
 
     enum MessageType {
-        HELLO("HELLO"), IDASSIGN("ID"), GAMESTART("START"),
-        BATON("BATON"), CARD("CARD"), POINTS("POINTS"),
+        IDASSIGN("ID"),
+        BATON("BATON"), CARD("CARD"),
         ROUNDBEGIN("RBEGIN"), ROUNDEND("REND"), END("END"),
-        TRICKEND("TRICKEND");
+        TRICKEND("TRICKEND"), CONNECTED("CONNECTED");
 
         private final String key;
 
@@ -45,12 +45,13 @@ public class Message {
     public static String cardMessage(Card card) {
         String msg = MessageType.CARD.getKey() + "-";
         msg += card.getRank().getKey();
+        msg += "_";
         msg += card.getSuit().getKey();
         return msg;
     }
 
-    public static String pointsMessage(int points) {
-        String msg = MessageType.POINTS.getKey() + "-" + Integer.toString(points);
+    public static String simpleMessage(MessageType type) {
+        String msg = type.getKey();
         return msg;
     }
 
@@ -58,11 +59,6 @@ public class Message {
     public static String idMessage(boolean valid) {
         String end = valid ? "1" : "0";
         String msg = MessageType.IDASSIGN.getKey() + "-" + end;
-        return msg;
-    }
-
-    public static String simpleMessage(MessageType type) {
-        String msg = type.getKey();
         return msg;
     }
 
