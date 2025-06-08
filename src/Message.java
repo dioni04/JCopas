@@ -8,7 +8,7 @@ public class Message {
     private String content;
 
     enum MessageType {
-        IDASSIGN("ID"),
+        IDASSIGN("ID"), MOON("MOON"),
         BATON("BATON"), CARD("CARD"),
         ROUNDBEGIN("RBEGIN"), ROUNDEND("REND"), END("END"),
         TRICKEND("TRICKEND"), CONNECTED("CONNECTED");

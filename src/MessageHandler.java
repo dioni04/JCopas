@@ -59,6 +59,9 @@ public class MessageHandler {
                 case "END":
                     handleEnd(parsedMessage);
                     break;
+                case "MOON":
+                    handleMoon(parsedMessage);
+                    break;
                 case "TRICKEND":
                     handleTrickEnd(parsedMessage);
                     break;
@@ -155,6 +158,11 @@ public class MessageHandler {
     private void handleRoundEnd(Message msg) {
         System.out.println("Round ending.");
         game.getPlayer().roundEnd();
+    }
+
+    private void handleMoon(Message msg){
+        System.out.printf("Player %d hit the moon! Receiving 50 points", msg.getSrc());
+        game.getPlayer().moonHit();
     }
 
     private void handleEnd(Message msg) {

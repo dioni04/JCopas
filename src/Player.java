@@ -16,6 +16,25 @@ public class Player {
 
     }
 
+    public void moonHit() {
+        points += 50;
+        if (points >= 100) {
+            game.handler.broadcastMessage(Message.MessageType.END);
+            game.endGame();
+        }
+    }
+
+    public boolean isMoonHit() {
+        int cards = 0;
+        for (Card card : scores) {
+            if (card.getSuit() == Card.Suit.HEARTS)
+                cards++;
+        }
+        if (cards == 13)
+            return true;
+        return false;
+    }
+
     public int getPoints() {
         return points;
     }
@@ -34,6 +53,13 @@ public class Player {
 
     public void gainPoints() {
         int p = 0;
+
+        if (isMoonHit()) {
+            System.out.println("You hit the moon! Other players receive 50 points");
+            game.handler.broadcastMessage(Message.MessageType.MOON);
+            scores.clear();
+            return;
+        }
         for (var card : scores) {
             p += card.getValue();
         }
@@ -140,7 +166,7 @@ public class Player {
         }
     }
 
-    //Acha primeira carta valida para jogar, usado com flag AUTO
+    // Acha primeira carta valida para jogar, usado com flag AUTO
     private int getFirstValid() {
         int i = 0;
         var suit = game.getCurrentSuit();
