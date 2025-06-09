@@ -25,14 +25,17 @@ public class Player {
     }
 
     public boolean isMoonHit() {
-        int cards = 0;
+        int hearts = 0;
+        boolean hasQueenOfSpades = false;
+
         for (Card card : scores) {
             if (card.getSuit() == Card.Suit.HEARTS)
-                cards++;
+                hearts++;
+            if (card.getSuit() == Card.Suit.SPADES && card.getRank() == Card.Rank.QUEEN)
+                hasQueenOfSpades = true;
         }
-        if (cards == 13)
-            return true;
-        return false;
+
+        return hearts == 13 && hasQueenOfSpades;
     }
 
     public int getPoints() {
